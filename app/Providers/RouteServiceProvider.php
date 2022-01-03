@@ -2,11 +2,13 @@
 
 namespace App\Providers;
 
-use Illuminate\Cache\RateLimiting\Limit;
-use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
+use App\Attributes\Method;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Router;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Route;
+use RabbitCMS\Modules\Support\ClassCollector;
+use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 
 class RouteServiceProvider extends ServiceProvider
 {
@@ -37,10 +39,16 @@ class RouteServiceProvider extends ServiceProvider
     {
         $this->configureRateLimiting();
 
-        $this->routes(function () {
-            Route::middleware('web')
-                ->namespace($this->namespace)
-                ->group(base_path('routes/web.php'));
+        $this->routes(function (Router $router) {
+            ClassCollector::make(app_path('Http/Controllers'), '\App\Http\Controllers')
+                ->find()->each(function (\ReflectionClass $class) use ($router) {
+                    foreach ($class->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
+                        $attributes = $method->getAttributes(Method::class, \ReflectionAttribute::IS_INSTANCEOF);
+                        foreach ($attributes as $attribute) {
+                            $attribute->newInstance()($method, $router);
+                        }
+                    }
+                });
         });
     }
 

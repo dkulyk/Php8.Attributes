@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Attributes;
 
 #[\Attribute(\Attribute::TARGET_METHOD)]
-class Get extends Route
+class Get extends Method
 {
     public function __construct(string $uri, array $options = [])
     {
