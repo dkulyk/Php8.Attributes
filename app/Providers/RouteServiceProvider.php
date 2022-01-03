@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Attributes\Group;
 use App\Attributes\Method;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Router;
@@ -42,12 +43,23 @@ class RouteServiceProvider extends ServiceProvider
         $this->routes(function (Router $router) {
             ClassCollector::make(app_path('Http/Controllers'), '\App\Http\Controllers')
                 ->find()->each(function (\ReflectionClass $class) use ($router) {
-                    foreach ($class->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
-                        $attributes = $method->getAttributes(Method::class, \ReflectionAttribute::IS_INSTANCEOF);
-                        foreach ($attributes as $attribute) {
-                            $attribute->newInstance()($method, $router);
+                    $routes = function (Router $router) use ($class) {
+                        foreach ($class->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
+                            $attributes = $method->getAttributes(Method::class, \ReflectionAttribute::IS_INSTANCEOF);
+                            foreach ($attributes as $attribute) {
+                                $attribute->newInstance()($method, $router);
+                            }
                         }
+                    };
+                    $attributes = $class->getAttributes(Group::class, \ReflectionAttribute::IS_INSTANCEOF);
+                    while (count($attributes)) {
+                        $attribute = array_pop($attributes);
+                        $routes = function (Router $router) use ($attribute, $class, $routes) {
+                            $attribute->newInstance()($class, $router, $routes);
+                        };
                     }
+
+                    $router->group([], $routes);
                 });
         });
     }

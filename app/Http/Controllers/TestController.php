@@ -3,7 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Attributes\Get;
+use App\Attributes\Group;
 
+#[Group([
+    'middleware' => 'web',
+])]
+#[Group([
+    'prefix' => 'test1',
+])]
+#[Group([
+    'prefix' => 'test2',
+])]
 class TestController extends Controller
 {
     use SharedActionTrait;
