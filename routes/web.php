@@ -14,5 +14,5 @@ use App\Http\Controllers\TestController;
 |
 */
 
-Route::get('', [TestController::class, 'index']);
-Route::get('{id}', [TestController::class, 'view']);
+//Route::get('', [TestController::class, 'index']);
+//Route::get('{id}', [TestController::class, 'view']);
