@@ -47,21 +47,29 @@ class RouteServiceProvider extends ServiceProvider
                         foreach ($class->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
                             $attributes = $method->getAttributes(Method::class, \ReflectionAttribute::IS_INSTANCEOF);
                             foreach ($attributes as $attribute) {
-                                $attribute->newInstance()($method, $router);
+                                $router->group([], $this->prepareGroupAttributes($method, function (Router $router) use ($attribute, $method) {
+                                    $attribute->newInstance()($method, $router);
+                                }));
                             }
                         }
                     };
-                    $attributes = $class->getAttributes(Group::class, \ReflectionAttribute::IS_INSTANCEOF);
-                    while (count($attributes)) {
-                        $attribute = array_pop($attributes);
-                        $routes = function (Router $router) use ($attribute, $class, $routes) {
-                            $attribute->newInstance()($class, $router, $routes);
-                        };
-                    }
 
-                    $router->group([], $routes);
+                    $router->group([], $this->prepareGroupAttributes($class, $routes));
                 });
         });
+    }
+
+    private function prepareGroupAttributes(\ReflectionClass|\ReflectionMethod $class, \Closure $callback): \Closure
+    {
+        $attributes = $class->getAttributes(Group::class, \ReflectionAttribute::IS_INSTANCEOF);
+        while (count($attributes)) {
+            $attribute = array_pop($attributes);
+            $callback = function (Router $router) use ($attribute, $class, $callback) {
+                $attribute->newInstance()($router, $callback);
+            };
+        }
+
+        return $callback;
     }
 
     /**

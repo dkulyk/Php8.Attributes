@@ -11,7 +11,7 @@ class Group
     {
     }
 
-    public function __invoke(\ReflectionClass $class, Router $router, \Closure $routes)
+    public function __invoke(Router $router, \Closure $routes)
     {
         $router->group($this->options, $routes);
     }
