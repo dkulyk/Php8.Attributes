@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Attributes;
 
-use Illuminate\Routing\Route;
 use Illuminate\Routing\Router;
 
 #[\Attribute(\Attribute::TARGET_METHOD)]
